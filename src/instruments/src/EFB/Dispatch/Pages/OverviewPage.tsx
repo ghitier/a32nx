@@ -1,104 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { IconAlignRight, IconBox, IconPlane, IconSwitchHorizontal, IconUsers, IconBolt } from '@tabler/icons';
+import React, { FC } from 'react';
+import { IconPlane } from '@tabler/icons';
+import { Box, LightningFill, PeopleFill, Rulers, Speedometer2 } from 'react-bootstrap-icons';
+import { usePersistentProperty } from '@instruments/common/persistence';
 import fuselage from '../../Assets/320neo-outline-nose.svg';
 import { useSimVar } from '../../../Common/simVars';
-import { useAppSelector } from '../../Store/store';
+
+interface InformationEntryProps {
+    title: string;
+    info: string;
+}
+
+const InformationEntry: FC<InformationEntryProps> = ({ children, title, info }) => (
+    <div>
+        <div className="flex flex-row items-center space-x-4 text-theme-highlight">
+            {children}
+            <p>{title}</p>
+        </div>
+        <p className="font-bold">{info}</p>
+    </div>
+);
 
 export const OverviewPage = () => {
-    const [, setUnitConversion] = useState(1000);
-
-    const { units } = useAppSelector((state) => state.simbrief.data);
-
-    useEffect(() => {
-        const unitConv = (units === 'kgs') ? 1000 : 2240;
-        setUnitConversion(unitConv);
-    }, [units]);
+    const usingMetric = usePersistentProperty('CONFIG_USING_METRIC_UNIT')[0] === '1';
 
     let [airline] = useSimVar('ATC AIRLINE', 'String', 1_000);
 
-    if (airline === 0 || null || '') {
-        airline = 'FlyByWire Simulations';
-    }
+    airline ||= 'FlyByWire Simulations';
+
+    const getConvertedInfo = (metricValue: number, unitType: 'weight' |'volume' |'distance') => {
+        const numberWithCommas = (x: number) => x.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+        switch (unitType) {
+        case 'weight':
+            if (usingMetric) {
+                return `${numberWithCommas(metricValue)} [kg]`;
+            }
+            return `${numberWithCommas(metricValue * 2.205)} [lbs]`;
+        case 'volume':
+            if (usingMetric) {
+                return `${numberWithCommas(metricValue)} [l]`;
+            }
+            return `${numberWithCommas(metricValue / 3.785)} [gal]`;
+        case 'distance':
+            return `${numberWithCommas(metricValue)} [nm]`;
+        default: throw new Error('Invalid unit type');
+        }
+    };
 
     return (
         <div className="overflow-hidden p-6 mt-4 mr-3 w-1/2 rounded-lg border-2 shadow-md border-theme-accent h-efb">
-            <h2 className="text-2xl font-medium">Airbus A320neo</h2>
-            <span className="text-lg">{airline}</span>
+            <h1 className="font-bold">Airbus A320neo</h1>
+            <p>{airline}</p>
+
             <div className="flex justify-center items-center mt-6">
-                <img className="mr-32 -ml-96 h-48 flip-horizontal" src={fuselage} />
+                <img className="mr-32 -ml-96 h-64 flip-horizontal" src={fuselage} />
             </div>
-            <div className="flex mt-8">
-                <div className="w-1/2">
-                    <h3 className="flex items-center text-xl font-medium">
-                        <IconPlane className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Model
-                    </h3>
-                    <span className="mt-2 text-lg">A320-251N [A20N]</span>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconSwitchHorizontal className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Range
-                    </h3>
-                    <span className="mt-2 text-lg">3400 [nm]</span>
+            <div className="flex flex-row mt-8 space-x-16">
+                <div className="flex flex-col space-y-8">
+                    <InformationEntry title="Model" info="A320-251N [A20N]">
+                        <IconPlane size={23} stroke={1.5} strokeLinejoin="miter" />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconBox className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        MRW
-                    </h3>
-                    <span className="mt-2 text-lg">79,400 [kg]</span>
+                    <InformationEntry title="Range" info={getConvertedInfo(3400, 'distance')}>
+                        <Rulers size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconBox className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        MZFW
-                    </h3>
-                    <span className="mt-2 text-lg">64,300 [kg]</span>
+                    <InformationEntry title="MRW" info={getConvertedInfo(79400, 'weight')}>
+                        <Box size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconUsers className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Max PAX
-                    </h3>
-                    <span className="mt-2 text-lg">174</span>
+                    <InformationEntry title="MZFW" info={getConvertedInfo(64300, 'weight')}>
+                        <Box size={23} />
+                    </InformationEntry>
+
+                    <InformationEntry title="Maximum Passengers" info="174 passengers">
+                        <PeopleFill size={23} />
+                    </InformationEntry>
                 </div>
-                <div className="w-1/2">
-                    <h3 className="flex items-center text-xl font-medium">
-                        <IconBolt className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Engines
-                    </h3>
-                    <span className="mt-2 text-lg">CFM LEAP 1A-26</span>
+                <div className="flex flex-col space-y-8">
+                    <InformationEntry title="Engines" info="CFM LEAP 1A-26">
+                        <LightningFill size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconAlignRight className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Mmo
-                    </h3>
-                    <span className="mt-2 text-lg">0.82</span>
+                    <InformationEntry title="MMO" info="0.82">
+                        <Speedometer2 size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconBox className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        MTOW
-                    </h3>
-                    <span className="mt-2 text-lg">79,000 [kg]</span>
+                    <InformationEntry title="MTOW" info={getConvertedInfo(79000, 'weight')}>
+                        <Box size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconBox className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Max Fuel Capacity
-                    </h3>
-                    <span className="mt-2 text-lg">23,721 [l]</span>
+                    <InformationEntry title="Maximum Fuel Capacity" info={getConvertedInfo(23721, 'volume')}>
+                        <Box size={23} />
+                    </InformationEntry>
 
-                    <h3 className="flex items-center mt-6 text-xl font-medium">
-                        <IconBox className="mr-2" size={23} stroke={1.5} strokeLinejoin="miter" />
-                        {' '}
-                        Max Cargo
-                    </h3>
-                    <span className="mt-2 text-lg">9,435 [kg]</span>
+                    <InformationEntry title="Maximum Cargo" info={getConvertedInfo(9435, 'weight')}>
+                        <Box size={23} />
+                    </InformationEntry>
                 </div>
             </div>
         </div>

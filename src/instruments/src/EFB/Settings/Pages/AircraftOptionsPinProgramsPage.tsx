@@ -12,7 +12,7 @@ export const AircraftOptionsPinProgramsPage = () => {
     const [accelerationOutHeight, setAccelerationOutHeight] = usePersistentProperty('CONFIG_ENG_OUT_ACCEL_ALT', '1500');
     const [accelerationOutHeightSetting, setAccelerationOutHeightSetting] = useState(accelerationOutHeight);
 
-    const [weightUnit, setWeightUnit] = usePersistentProperty('CONFIG_USING_METRIC_UNIT', '1');
+    const [usingMetric, setUsingMetric] = usePersistentProperty('CONFIG_USING_METRIC_UNIT', '1');
     const [paxSigns, setPaxSigns] = usePersistentProperty('CONFIG_USING_PORTABLE_DEVICES', '0');
     const [isisBaro, setIsisBaro] = usePersistentProperty('ISIS_BARO_UNIT_INHG', '0');
     const [isisMetricAltitude, setIsisMetricAltitude] = usePersistentProperty('ISIS_METRIC_ALTITUDE', '0');
@@ -113,8 +113,8 @@ export const AircraftOptionsPinProgramsPage = () => {
                     {weightUnitButtons.map((button) => (
                         <SelectItem
                             enabled
-                            onSelect={() => setWeightUnit(button.setting)}
-                            selected={weightUnit === button.setting}
+                            onSelect={() => setUsingMetric(button.setting)}
+                            selected={usingMetric === button.setting}
                         >
                             {button.name}
                         </SelectItem>
