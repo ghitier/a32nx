@@ -308,7 +308,7 @@ export const Ground = () => {
                 </GroundServiceButton>
             </ServiceButtonWrapper>
 
-            <div className="flex absolute bottom-2 left-0 flex-col ml-4 space-y-4">
+            <div className="flex absolute bottom-6 left-0 flex-col ml-4 space-y-4">
                 <div className="flex flex-row space-x-4">
                     <div>
                         <h1 className="pb-1 text-xl font-medium text-center text-white">Call Tug</h1>

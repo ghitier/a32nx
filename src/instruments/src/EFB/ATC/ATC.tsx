@@ -3,6 +3,7 @@ import * as apiClient from '@flybywiresim/api-client';
 import { useInterval } from '@flybywiresim/react-components';
 import { Link } from 'react-router-dom';
 import { Gear } from 'react-bootstrap-icons';
+import { ScrollableContainer } from '../Components/ScrollableContainer';
 import { useSimVar, useSplitSimVar } from '../../Common/simVars';
 import { usePersistentProperty } from '../../Common/persistence';
 
@@ -20,40 +21,6 @@ export const ATC = () => {
     const [currentLatitude] = useSimVar('GPS POSITION LAT', 'Degrees', 5000);
     const [currentLongitude] = useSimVar('GPS POSITION LON', 'Degrees', 5000);
     const [atisSource] = usePersistentProperty('CONFIG_ATIS_SRC', 'FAA');
-
-    const [contentOverflows, setContentOverflows] = useState(false);
-
-    const containerRef = useRef<HTMLDivElement>(null);
-    const contentRef = useRef<HTMLDivElement>(null);
-    const position = useRef({ top: 0, y: 0 });
-
-    const handleMouseDown = (event: React.MouseEvent) => {
-        position.current.top = containerRef.current ? containerRef.current.scrollTop : 0;
-        position.current.y = event.clientY;
-
-        document.addEventListener('mousemove', mouseMoveHandler);
-        document.addEventListener('mouseup', mouseUpHandler);
-    };
-
-    const mouseMoveHandler = (event: MouseEvent) => {
-        const dy = event.clientY - position.current.y;
-        if (containerRef.current) {
-            containerRef.current.scrollTop = position.current.top - dy;
-        }
-    };
-
-    const mouseUpHandler = () => {
-        document.removeEventListener('mousemove', mouseMoveHandler);
-        document.removeEventListener('mouseup', mouseUpHandler);
-    };
-
-    useEffect(() => {
-        if (contentRef.current) {
-            if (contentRef.current.clientHeight > 29 * parseFloat(getComputedStyle(document.documentElement).fontSize)) {
-                setContentOverflows(true);
-            }
-        }
-    }, [controllers]);
 
     const loadAtc = useCallback(() => {
         apiClient.ATC.getAtc(atisSource.toString().toLowerCase()).then((res) => {
@@ -141,53 +108,46 @@ export const ATC = () => {
             { (atisSource === 'IVAO' || atisSource === 'VATSIM') ? (
                 <div className="w-full h-efb">
                     {/* TODO: REPLACE WITH JIT VALUE */}
-                    <div
-                        className={`${contentOverflows && 'overflow-y-scroll'} scrollbar`}
-                        style={{ height: '29rem' }}
-                        ref={containerRef}
-                        onMouseDown={handleMouseDown}
-                    >
-                        <div className={`flex flex-wrap ${contentOverflows && 'mr-4'}`} ref={contentRef}>
-                            {controllers && controllers.map((controller, index) => (
-                                <div className={`${index % 2 === 0 && 'pr-4'} w-full max-w-1/2`}>
-                                    <div className="overflow-hidden relative p-6 mt-4 w-full rounded-md bg-theme-secondary">
-                                        <h2 className="font-bold">
-                                            {controller.callsign}
-                                        </h2>
-                                        <h2>
-                                            {controller.frequency}
-                                        </h2>
+                    <ScrollableContainer height={29} resizeDependencies={[controllers]}>
+                        {controllers && controllers.map((controller, index) => (
+                            <div className={`${index % 2 === 0 && 'pr-4'} w-full max-w-1/2`}>
+                                <div className="overflow-hidden relative p-6 mt-4 w-full rounded-md bg-theme-secondary">
+                                    <h2 className="font-bold">
+                                        {controller.callsign}
+                                    </h2>
+                                    <h2>
+                                        {controller.frequency}
+                                    </h2>
 
-                                        <div className="flex absolute inset-0 flex-row opacity-0 hover:opacity-100 transition duration-100">
-                                            <div
-                                                className="flex justify-center items-center w-full bg-opacity-80 bg-theme-highlight"
-                                                onClick={() => setActiveFrequency(toFrequency(controller.frequency))}
-                                            >
-                                                <h2>Set Active</h2>
-                                            </div>
-                                            <div
-                                                className="flex justify-center items-center w-full bg-yellow-500 bg-opacity-80"
-                                                onClick={() => setStandbyFrequency(toFrequency(controller.frequency))}
-                                            >
-                                                <h2>Set Standby</h2>
-                                            </div>
+                                    <div className="flex absolute inset-0 flex-row opacity-0 hover:opacity-100 transition duration-100">
+                                        <div
+                                            className="flex justify-center items-center w-full bg-opacity-80 bg-theme-highlight"
+                                            onClick={() => setActiveFrequency(toFrequency(controller.frequency))}
+                                        >
+                                            <h2>Set Active</h2>
+                                        </div>
+                                        <div
+                                            className="flex justify-center items-center w-full bg-yellow-500 bg-opacity-80"
+                                            onClick={() => setStandbyFrequency(toFrequency(controller.frequency))}
+                                        >
+                                            <h2>Set Standby</h2>
                                         </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                            </div>
+                        ))}
+                    </ScrollableContainer>
                     <div className="flex flex-row mt-8 h-96 rounded-lg border divide-x shadow-lg divide-theme-accent border-theme-accent">
                         <div className="flex flex-col justify-between p-6">
                             <div>
                                 <p>Active</p>
-                                <div className="flex justify-center items-center py-4 px-10 mt-4 text-6xl rounded-lg border shadow-lg text-theme-highlight font-rmp border-theme-accent">
+                                <div className="flex justify-center items-center mt-4 w-72 h-24 text-6xl rounded-lg border shadow-lg text-theme-highlight font-rmp border-theme-accent">
                                     {displayedActiveFrequency && displayedActiveFrequency}
                                 </div>
                             </div>
                             <div>
                                 <p>Standby</p>
-                                <div className="flex justify-center items-center py-4 px-10 mt-4 text-6xl text-yellow-500 rounded-lg border shadow-lg font-rmp border-theme-accent">
+                                <div className="flex justify-center items-center mt-4 w-72 h-24 text-6xl text-yellow-500 rounded-lg border shadow-lg font-rmp border-theme-accent">
                                     {displayedStandbyFrequency && displayedStandbyFrequency}
                                 </div>
                             </div>
@@ -221,55 +181,13 @@ type ControllerInformationProps = {
     currentAtc: ATCInfoExtended | undefined,
 }
 
-const ControllerInformation = ({ currentAtc }: ControllerInformationProps) => {
-    const [contentOverflows, setContentOverflows] = useState(false);
-
-    const containerRef = useRef<HTMLDivElement>(null);
-    const contentRef = useRef<HTMLDivElement>(null);
-    const position = useRef({ top: 0, y: 0 });
-
-    const handleMouseDown = (event: React.MouseEvent) => {
-        position.current.top = containerRef.current ? containerRef.current.scrollTop : 0;
-        position.current.y = event.clientY;
-
-        document.addEventListener('mousemove', mouseMoveHandler);
-        document.addEventListener('mouseup', mouseUpHandler);
-    };
-
-    const mouseMoveHandler = (event: MouseEvent) => {
-        const dy = event.clientY - position.current.y;
-        if (containerRef.current) {
-            containerRef.current.scrollTop = position.current.top - dy;
-        }
-    };
-
-    const mouseUpHandler = () => {
-        document.removeEventListener('mousemove', mouseMoveHandler);
-        document.removeEventListener('mouseup', mouseUpHandler);
-    };
-
-    useEffect(() => {
-        if (contentRef.current) {
-            if (contentRef.current.clientHeight > 24 * parseFloat(getComputedStyle(document.documentElement).fontSize)) {
-                setContentOverflows(true);
-            }
-        }
-    }, [currentAtc]);
-
-    return (
-        <div
-            className={`${contentOverflows && 'overflow-y-scroll'} overflow-hidden flex-wrap p-2 w-full h-96 scrollbar`}
-            ref={containerRef}
-            onMouseDown={handleMouseDown}
-        >
-            <div ref={contentRef}>
-                <h2>{currentAtc?.callsign}</h2>
-                {currentAtc?.textAtis.map((line) => (
-                    <p className="flex flex-wrap mt-4">{line}</p>
-                ))}
-            </div>
-        </div>
-    );
-};
+const ControllerInformation = ({ currentAtc }: ControllerInformationProps) => (
+    <ScrollableContainer height={24} resizeDependencies={[currentAtc]}>
+        <h2>{currentAtc?.callsign}</h2>
+        {currentAtc?.textAtis.map((line) => (
+            <p className="flex flex-wrap mt-4">{line}</p>
+        ))}
+    </ScrollableContainer>
+);
 
 export default ATC;
