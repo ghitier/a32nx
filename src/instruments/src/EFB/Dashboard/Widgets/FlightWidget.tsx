@@ -6,17 +6,14 @@ import {
 } from '@tabler/icons';
 import { FileEarmarkArrowDown } from 'react-bootstrap-icons';
 import { usePersistentProperty } from '@instruments/common/persistence';
+import { toast } from 'react-toastify';
 import fuselage from '../../Assets/320neo-outline-nose.svg';
 
 import { useAppSelector, useAppDispatch } from '../../Store/store';
 
 import { fetchSimbriefDataAction } from '../../Store/features/simBrief';
-import { useUIMessages } from '../../UIMessages/Provider';
-import { Notification } from '../../UIMessages/Notification';
 
 const FlightWidget = () => {
-    const uiMessages = useUIMessages();
-
     const [simbriefUserId] = usePersistentProperty('CONFIG_SIMBRIEF_USERID');
     const simbriefData = useAppSelector((state) => state.simbrief.data);
     const dispatch = useAppDispatch();
@@ -133,13 +130,7 @@ const FlightWidget = () => {
                             fetchSimbriefDataAction(simbriefUserId ?? '').then((action) => {
                                 dispatch(action);
                             }).catch((e) => {
-                                uiMessages.pushNotification(
-                                    <Notification
-                                        type="ERROR"
-                                        title="SimBrief Error"
-                                        message={e.message}
-                                    />,
-                                );
+                                toast.error(e.message);
                             });
                         }}
                         className="flex justify-center items-center p-2 space-x-4 w-full rounded-lg border-2 shadow-lg focus:outline-none bg-theme-highlight border-theme-secondary"

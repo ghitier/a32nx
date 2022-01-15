@@ -1,14 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { usePersistentProperty } from '@instruments/common/persistence';
 import { FileEarmarkArrowDown, ZoomIn, ZoomOut } from 'react-bootstrap-icons';
+import { toast } from 'react-toastify';
 import { fetchSimbriefDataAction } from '../../Store/features/simBrief';
 import { useAppDispatch, useAppSelector } from '../../Store/store';
-import { Notification } from '../../UIMessages/Notification';
-import { useUIMessages } from '../../UIMessages/Provider';
 
 export const LoadSheetWidget = () => {
-    const uiMessages = useUIMessages();
-
     const loadsheet = useAppSelector((state) => state.simbrief.data.loadsheet);
 
     const position = useRef({ top: 0, y: 0 });
@@ -123,13 +120,7 @@ export const LoadSheetWidget = () => {
                             fetchSimbriefDataAction(simbriefUserId ?? '').then((action) => {
                                 dispatch(action);
                             }).catch((e) => {
-                                uiMessages.pushNotification(
-                                    <Notification
-                                        type="ERROR"
-                                        title="SimBrief Error"
-                                        message={e.message}
-                                    />,
-                                );
+                                toast.error(e.message);
                             });
                         }}
                         className="flex justify-center items-center py-2 px-16 space-x-4 rounded-lg border-2 shadow-lg focus:outline-none bg-theme-highlight border-theme-secondary"

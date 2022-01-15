@@ -4,9 +4,11 @@ import { Redirect, Route, Switch } from 'react-router-dom';
 import { useSimVar } from '@instruments/common/simVars';
 import { useInteractionEvent } from '@instruments/common/hooks';
 import { Battery, BatteryCharging } from 'react-bootstrap-icons';
-import { UIMessagesProvider, useUIMessages } from './UIMessages/Provider';
+import { ToastContainer, toast } from 'react-toastify';
 import { usePersistentNumberProperty, usePersistentProperty } from '../Common/persistence';
 import NavigraphClient, { NavigraphContext } from './ChartsApi/Navigraph';
+import 'react-toastify/dist/ReactToastify.css';
+import './toast.css';
 
 import { StatusBar } from './StatusBar/StatusBar';
 import { ToolBar } from './ToolBar/ToolBar';
@@ -24,23 +26,12 @@ import { clearEfbState, useAppDispatch, useAppSelector } from './Store/store';
 
 import { fetchSimbriefDataAction, initialState as simbriefInitialState } from './Store/features/simBrief';
 
-import { NotificationsContainer, Notification } from './UIMessages/Notification';
 import { FbwLogo } from './Assets/FbwLogo';
 
 const BATTERY_DURATION_CHARGE_MIN = 180;
 const BATTERY_DURATION_DISCHARGE_MIN = 240;
 
 const navigraph = new NavigraphClient();
-
-const ApplicationNotifications = () => {
-    const firstNotification = useUIMessages().notifications[0];
-
-    return (
-        <NotificationsContainer>
-            {firstNotification}
-        </NotificationsContainer>
-    );
-};
 
 const ScreenLoading = () => (
     <div className="flex justify-center items-center w-screen h-screen bg-theme-statusbar">
@@ -83,8 +74,6 @@ interface BatteryStatus {
 export const usePower = () => React.useContext(PowerContext);
 
 const Efb = () => {
-    const uiMessages = useUIMessages();
-
     const [powerState, setPowerState] = useState<PowerStates>(PowerStates.SHUTOFF);
 
     const [currentLocalTime] = useSimVar('E:LOCAL TIME', 'seconds', 3000);
@@ -145,13 +134,7 @@ const Efb = () => {
                 fetchSimbriefDataAction(simbriefUserId ?? '').then((action) => {
                     dispatch(action);
                 }).catch((e) => {
-                    uiMessages.pushNotification(
-                        <Notification
-                            type="ERROR"
-                            title="SimBrief Error"
-                            message={e.message}
-                        />,
-                    );
+                    toast.error(e.message);
                 });
             }
         }
@@ -210,49 +193,51 @@ const Efb = () => {
         return (
             <NavigraphContext.Provider value={navigraph}>
                 <PowerContext.Provider value={{ powerState, setPowerState }}>
-                    <UIMessagesProvider>
-                        <div className="bg-theme-body">
-                            <ApplicationNotifications />
-                            <StatusBar
-                                batteryLevel={batteryLevel.level}
-                                isCharging={dc2BusIsPowered === 1}
-                            />
-                            <div className="flex flex-row">
-                                <ToolBar />
-                                <div className="pt-14 pr-6 w-screen h-screen text-gray-700">
-                                    <Switch>
-                                        <Route exact path="/">
-                                            <Redirect to="/dashboard" />
-                                        </Route>
-                                        <Route path="/dashboard">
-                                            <Dashboard />
-                                        </Route>
-                                        <Route path="/dispatch">
-                                            <Dispatch />
-                                        </Route>
-                                        <Route path="/ground">
-                                            <Ground />
-                                        </Route>
-                                        <Route path="/performance">
-                                            <Performance />
-                                        </Route>
-                                        <Route path="/navigation">
-                                            <Navigation />
-                                        </Route>
-                                        <Route path="/atc">
-                                            <ATC />
-                                        </Route>
-                                        <Route path="/failures">
-                                            <Failures />
-                                        </Route>
-                                        <Route path="/settings">
-                                            <Settings />
-                                        </Route>
-                                    </Switch>
-                                </div>
+                    <div className="bg-theme-body">
+                        <ToastContainer
+                            position="top-center"
+                            draggableDirection="y"
+                            limit={2}
+                        />
+                        <StatusBar
+                            batteryLevel={batteryLevel.level}
+                            isCharging={dc2BusIsPowered === 1}
+                        />
+                        <div className="flex flex-row">
+                            <ToolBar />
+                            <div className="pt-14 pr-6 w-screen h-screen text-gray-700">
+                                <Switch>
+                                    <Route exact path="/">
+                                        <Redirect to="/dashboard" />
+                                    </Route>
+                                    <Route path="/dashboard">
+                                        <Dashboard />
+                                    </Route>
+                                    <Route path="/dispatch">
+                                        <Dispatch />
+                                    </Route>
+                                    <Route path="/ground">
+                                        <Ground />
+                                    </Route>
+                                    <Route path="/performance">
+                                        <Performance />
+                                    </Route>
+                                    <Route path="/navigation">
+                                        <Navigation />
+                                    </Route>
+                                    <Route path="/atc">
+                                        <ATC />
+                                    </Route>
+                                    <Route path="/failures">
+                                        <Failures />
+                                    </Route>
+                                    <Route path="/settings">
+                                        <Settings />
+                                    </Route>
+                                </Switch>
                             </div>
                         </div>
-                    </UIMessagesProvider>
+                    </div>
                 </PowerContext.Provider>
             </NavigraphContext.Provider>
         );

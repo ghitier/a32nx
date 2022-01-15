@@ -4,16 +4,13 @@ import { usePersistentProperty } from '@instruments/common/persistence';
 
 import { PopUp } from '@shared/popup';
 import { HttpError } from '@flybywiresim/api-client';
+import { toast } from 'react-toastify';
 import { Toggle } from '../../Components/Form/Toggle';
 import { SelectGroup, SelectItem } from '../../Components/Form/Select';
 import SimpleInput from '../../Components/Form/SimpleInput/SimpleInput';
 import { ButtonType, SettingItem, SettingsPage } from '../Settings';
-import { useUIMessages } from '../../UIMessages/Provider';
-import { Notification } from '../../UIMessages/Notification';
 
 export const AtsuAocPage = () => {
-    const uiMessages = useUIMessages();
-
     const [atisSource, setAtisSource] = usePersistentProperty('CONFIG_ATIS_SRC', 'FAA');
     const [metarSource, setMetarSource] = usePersistentProperty('CONFIG_METAR_SRC', 'MSFS');
     const [tafSource, setTafSource] = usePersistentProperty('CONFIG_TAF_SRC', 'NOAA');
@@ -67,25 +64,13 @@ export const AtsuAocPage = () => {
 
     const handleUsernameInput = (value: string) => {
         getSimbriefUserId(value).then((response) => {
-            uiMessages.pushNotification(
-                <Notification
-                    type="SUCCESS"
-                    title="SimBrief Information Updated Successfully"
-                    message="Your SimBrief information has been validated and updated."
-                />,
-            );
+            toast.success(`Your SimBrief PilotID has been validated and updated to ${response}.`);
 
             setSimbriefUserId(response);
             setSimbriefDisplay(response);
         }).catch(() => {
             setSimbriefDisplay(simbriefUserId);
-            uiMessages.pushNotification(
-                <Notification
-                    type="ERROR"
-                    title="SimBrief Error"
-                    message="Please check that you have correctly entered your SimBrief username or pilot ID."
-                />,
-            );
+            toast.error('Please check that you have correctly entered your SimBrief username or pilot ID.');
         });
     };
 
